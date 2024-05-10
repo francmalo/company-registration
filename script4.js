@@ -49,10 +49,8 @@ function addProposedName() {
     const newItem = document.createElement('div');
     newItem.classList.add('proposed-name-item');
     newItem.innerHTML = `
-        <input type="text" name="proposed_names[]" placeholder="Proposed Name" required>
-        <input type="file" name="proposed_name_national_ids[]" accept="image/*, application/pdf" required placeholder="National ID">
-        <input type="file" name="proposed_name_pin_certificates[]" accept="image/*, application/pdf" required placeholder="PIN Certificate">
-        <input type="file" name="proposed_name_passport_photos[]" accept="image/jpeg, image/png" required placeholder="Passport Photo">
+        <input type="text" name="proposed_names[]" required>
+        <input type="file" name="proposed_name_documents[]" accept="image/*, application/pdf" required>
     `;
     proposedNamesContainer.appendChild(newItem);
 }
@@ -63,9 +61,8 @@ function addShareholderDirector() {
     newItem.classList.add('shareholder-director-item');
     newItem.innerHTML = `
         <input type="text" name="shareholders_directors_names[]" placeholder="Name" required>
-        <input type="file" name="shareholders_directors_national_ids[]" accept="image/*, application/pdf" required placeholder="National ID">
-        <input type="file" name="shareholders_directors_pin_certificates[]" accept="image/*, application/pdf" required placeholder="PIN Certificate">
-        <input type="file" name="shareholders_directors_passport_photos[]" accept="image/jpeg, image/png" required placeholder="Passport Photo">
+        <input type="text" name="shareholders_directors_ids[]" placeholder="National ID/Passport Number" required>
+        <input type="file" name="shareholders_directors_documents[]" accept="image/*, application/pdf" required>
         <input type="text" name="shareholders_directors_addresses[]" placeholder="Residential Address" required>
         <input type="tel" name="shareholders_directors_phones[]" placeholder="Phone Number" required>
         <input type="email" name="shareholders_directors_emails[]" placeholder="Email Address" required>
@@ -81,7 +78,7 @@ function addBeneficialOwner() {
     newItem.innerHTML = `
         <input type="text" name="beneficial_owners_names[]" placeholder="Name" required>
         <input type="text" name="beneficial_owners_ids[]" placeholder="National ID/Passport Number" required>
-        <input type="file" name="beneficial_owners_documents[]" accept="image/*, application/pdf" required placeholder="Supporting Documents">
+        <input type="file" name="beneficial_owners_documents[]" accept="image/*, application/pdf" required>
         <input type="text" name="beneficial_owners_addresses[]" placeholder="Residential Address" required>
         <input type="tel" name="beneficial_owners_phones[]" placeholder="Phone Number" required>
         <input type="email" name="beneficial_owners_emails[]" placeholder="Email Address" required>

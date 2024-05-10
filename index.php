@@ -23,32 +23,45 @@
             <option value="Limited Liability Partnership">Limited Liability Partnership</option>
             <option value="Foreign Company Registration in Kenya">Foreign Company Registration in Kenya</option>
         </select>
+        <hr>
 
         <label>Proposed Company Names</label>
         <div id="proposed-names-container">
             <div class="proposed-name-item">
-                <input type="text" name="proposed_names[]" required>
-                <input type="file" name="proposed_name_documents[]" accept="image/*, application/pdf" required>
+                <input type="text" name="proposed_names[]" placeholder="Proposed Name" required>
+                <input type="file" name="proposed_name_national_ids[]" accept="image/*, application/pdf" required
+                    placeholder="National ID">
+                <input type="file" name="proposed_name_pin_certificates[]" accept="image/*, application/pdf" required
+                    placeholder="PIN Certificate">
+                <input type="file" name="proposed_name_passport_photos[]" accept="image/jpeg, image/png" required
+                    placeholder="Passport Photo">
             </div>
         </div>
         <button type="button" id="add-proposed-name">Add Another Proposed Name</button>
+        <hr>
 
         <label for="articles_of_association">Articles of Association Details</label>
         <textarea id="articles_of_association" name="articles_of_association" required></textarea>
+        <hr>
 
         <label for="registered_address">Registered Address</label>
         <textarea id="registered_address" name="registered_address" required></textarea>
+        <hr>
 
         <label for="share_information">Share Information</label>
         <textarea id="share_information" name="share_information" required></textarea>
+        <hr>
 
         <label>Shareholders and Directors</label>
         <div id="shareholders-directors-container">
             <div class="shareholder-director-item">
                 <input type="text" name="shareholders_directors_names[]" placeholder="Name" required>
-                <input type="text" name="shareholders_directors_ids[]" placeholder="National ID/Passport Number"
-                    required>
-                <input type="file" name="shareholders_directors_documents[]" accept="image/*, application/pdf" required>
+                <input type="file" name="shareholders_directors_national_ids[]" accept="image/*, application/pdf"
+                    required placeholder="National ID">
+                <input type="file" name="shareholders_directors_pin_certificates[]" accept="image/*, application/pdf"
+                    required placeholder="PIN Certificate">
+                <input type="file" name="shareholders_directors_passport_photos[]" accept="image/jpeg, image/png"
+                    required placeholder="Passport Photo">
                 <input type="text" name="shareholders_directors_addresses[]" placeholder="Residential Address" required>
                 <input type="tel" name="shareholders_directors_phones[]" placeholder="Phone Number" required>
                 <input type="email" name="shareholders_directors_emails[]" placeholder="Email Address" required>
@@ -56,13 +69,15 @@
             </div>
         </div>
         <button type="button" id="add-shareholder-director">Add Another Shareholder/Director</button>
+        <hr>
 
         <label>Beneficial Owners</label>
         <div id="beneficial-owners-container">
             <div class="beneficial-owner-item">
                 <input type="text" name="beneficial_owners_names[]" placeholder="Name" required>
                 <input type="text" name="beneficial_owners_ids[]" placeholder="National ID/Passport Number" required>
-                <input type="file" name="beneficial_owners_documents[]" accept="image/*, application/pdf" required>
+                <input type="file" name="beneficial_owners_documents[]" accept="image/*, application/pdf" required
+                    placeholder="Supporting Documents">
                 <input type="text" name="beneficial_owners_addresses[]" placeholder="Residential Address" required>
                 <input type="tel" name="beneficial_owners_phones[]" placeholder="Phone Number" required>
                 <input type="email" name="beneficial_owners_emails[]" placeholder="Email Address" required>
@@ -70,6 +85,7 @@
             </div>
         </div>
         <button type="button" id="add-beneficial-owner">Add Another Beneficial Owner</button>
+        <hr>
 
         <input type="submit" value="Register">
     </form>

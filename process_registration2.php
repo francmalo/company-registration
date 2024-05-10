@@ -22,32 +22,27 @@ $registered_address = $_POST['registered_address'];
 $share_information = $_POST['share_information'];
 
 // Handle the proposed names documents
-$proposed_name_documents = array();
-foreach ($_FILES['proposed_name_national_ids']['tmp_name'] as $key => $tmp_name) {
-    $proposed_name_documents['national_ids'][] = file_get_contents($tmp_name);
-    $proposed_name_documents['pin_certificates'][] = file_get_contents($_FILES['proposed_name_pin_certificates']['tmp_name'][$key]);
-    $proposed_name_documents['passport_photos'][] = file_get_contents($_FILES['proposed_name_passport_photos']['tmp_name'][$key]);
+$proposed_name_documents = "";
+foreach ($_FILES['proposed_name_documents']['tmp_name'] as $key => $tmp_name) {
+    $proposed_name_documents .= file_get_contents($tmp_name);
 }
-$proposed_name_documents = json_encode($proposed_name_documents);
 
 // Handle the shareholders and directors data
 $shareholders_directors = array();
-$shareholders_directors_documents = array();
+$shareholders_directors_documents = "";
 foreach ($_POST['shareholders_directors_names'] as $key => $name) {
     $shareholders_directors[] = array(
         'name' => $name,
+        'id' => $_POST['shareholders_directors_ids'][$key],
         'address' => $_POST['shareholders_directors_addresses'][$key],
         'phone' => $_POST['shareholders_directors_phones'][$key],
         'email' => $_POST['shareholders_directors_emails'][$key],
         'shares' => $_POST['shareholders_directors_shares'][$key]
     );
 
-    $shareholders_directors_documents['national_ids'][] = file_get_contents($_FILES['shareholders_directors_national_ids']['tmp_name'][$key]);
-    $shareholders_directors_documents['pin_certificates'][] = file_get_contents($_FILES['shareholders_directors_pin_certificates']['tmp_name'][$key]);
-    $shareholders_directors_documents['passport_photos'][] = file_get_contents($_FILES['shareholders_directors_passport_photos']['tmp_name'][$key]);
+    $shareholders_directors_documents .= file_get_contents($_FILES['shareholders_directors_documents']['tmp_name'][$key]);
 }
 $shareholders_directors = json_encode($shareholders_directors);
-$shareholders_directors_documents = json_encode($shareholders_directors_documents);
 
 // Handle the beneficial owners data
 $beneficial_owners = array();
@@ -74,7 +69,7 @@ $sql = "INSERT INTO business_registration (company_name, business_type, proposed
 $stmt = $conn->prepare($sql);
 
 // Bind the parameters
-$stmt->bind_param("sssssssssss", $company_name, $business_type, $proposed_names, $proposed_name_documents, $articles_of_association, $registered_address, $share_information, $shareholders_directors, $shareholders_directors_documents, $beneficial_owners, $beneficial_owners_documents);
+$stmt->bind_param("sssbssssss", $company_name, $business_type, $proposed_names, $proposed_name_documents, $articles_of_association, $registered_address, $share_information, $shareholders_directors, $shareholders_directors_documents, $beneficial_owners, $beneficial_owners_documents);
 
 // Execute the statement
 if ($stmt->execute()) {
