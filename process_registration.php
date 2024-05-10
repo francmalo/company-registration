@@ -1,16 +1,28 @@
 <?php
-// Database connection details
-$servername = "localhost";
-$username = "your_username";
-$password = "your_password";
-$database = "your_database";
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+require_once 'config.php';
 
-// Create a connection
-$conn = new mysqli($servername, $username, $password, $database);
+// Function to handle file uploads
+function uploadFiles($files, $upload_dir) {
+    $file_paths = array();
+    foreach ($files['tmp_name'] as $key => $tmp_name) {
+        $file_path = $upload_dir . basename($files['name'][$key]);
+        if (move_uploaded_file($tmp_name, $file_path)) {
+            $file_paths[] = $file_path;
+        } else {
+            // Handle file upload error
+            echo "Error uploading file: " . $files['name'][$key];
+        }
+    }
+    return $file_paths;
+}
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+// Create the uploads directory if it doesn't exist
+$upload_dir = 'uploads/';
+if (!is_dir($upload_dir)) {
+    mkdir($upload_dir, 0755, true);
 }
 
 // Get the form data
@@ -21,69 +33,97 @@ $articles_of_association = $_POST['articles_of_association'];
 $registered_address = $_POST['registered_address'];
 $share_information = $_POST['share_information'];
 
-// Handle the proposed names documents
-$proposed_name_documents = array();
-foreach ($_FILES['proposed_name_national_ids']['tmp_name'] as $key => $tmp_name) {
-    $proposed_name_documents['national_ids'][] = file_get_contents($tmp_name);
-    $proposed_name_documents['pin_certificates'][] = file_get_contents($_FILES['proposed_name_pin_certificates']['tmp_name'][$key]);
-    $proposed_name_documents['passport_photos'][] = file_get_contents($_FILES['proposed_name_passport_photos']['tmp_name'][$key]);
-}
-$proposed_name_documents = json_encode($proposed_name_documents);
+// Move the proposed name documents to the uploads directory
+$proposed_name_national_id_paths = uploadFiles($_FILES['proposed_name_national_ids'], $upload_dir);
+$proposed_name_pin_certificate_paths = uploadFiles($_FILES['proposed_name_pin_certificates'], $upload_dir);
+$proposed_name_passport_photo_paths = uploadFiles($_FILES['proposed_name_passport_photos'], $upload_dir);
 
-// Handle the shareholders and directors data
-$shareholders_directors = array();
-$shareholders_directors_documents = array();
-foreach ($_POST['shareholders_directors_names'] as $key => $name) {
-    $shareholders_directors[] = array(
-        'name' => $name,
-        'address' => $_POST['shareholders_directors_addresses'][$key],
-        'phone' => $_POST['shareholders_directors_phones'][$key],
-        'email' => $_POST['shareholders_directors_emails'][$key],
-        'shares' => $_POST['shareholders_directors_shares'][$key]
-    );
+$proposed_name_document_paths = array(
+    'national_ids' => $proposed_name_national_id_paths,
+    'pin_certificates' => $proposed_name_pin_certificate_paths,
+    'passport_photos' => $proposed_name_passport_photo_paths
+);
+$proposed_name_documents = json_encode($proposed_name_document_paths);
 
-    $shareholders_directors_documents['national_ids'][] = file_get_contents($_FILES['shareholders_directors_national_ids']['tmp_name'][$key]);
-    $shareholders_directors_documents['pin_certificates'][] = file_get_contents($_FILES['shareholders_directors_pin_certificates']['tmp_name'][$key]);
-    $shareholders_directors_documents['passport_photos'][] = file_get_contents($_FILES['shareholders_directors_passport_photos']['tmp_name'][$key]);
-}
-$shareholders_directors = json_encode($shareholders_directors);
-$shareholders_directors_documents = json_encode($shareholders_directors_documents);
-
-// Handle the beneficial owners data
-$beneficial_owners = array();
-$beneficial_owners_documents = "";
-foreach ($_POST['beneficial_owners_names'] as $key => $name) {
-    $beneficial_owners[] = array(
-        'name' => $name,
-        'id' => $_POST['beneficial_owners_ids'][$key],
-        'address' => $_POST['beneficial_owners_addresses'][$key],
-        'phone' => $_POST['beneficial_owners_phones'][$key],
-        'email' => $_POST['beneficial_owners_emails'][$key],
-        'shares' => $_POST['beneficial_owners_shares'][$key]
-    );
-
-    $beneficial_owners_documents .= file_get_contents($_FILES['beneficial_owners_documents']['tmp_name'][$key]);
-}
-$beneficial_owners = json_encode($beneficial_owners);
-
-// Prepare the SQL statement
-$sql = "INSERT INTO business_registration (company_name, business_type, proposed_names, proposed_name_documents, articles_of_association, registered_address, share_information, shareholders_directors, shareholders_directors_documents, beneficial_owners, beneficial_owners_documents)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+// Prepare the SQL statement for business_registration table
+$sql = "INSERT INTO business_registration (company_name, business_type, proposed_names, proposed_name_documents, articles_of_association, registered_address, share_information)
+        VALUES (?, ?, ?, ?, ?, ?, ?)";
 
 // Prepare the statement
 $stmt = $conn->prepare($sql);
 
 // Bind the parameters
-$stmt->bind_param("sssssssssss", $company_name, $business_type, $proposed_names, $proposed_name_documents, $articles_of_association, $registered_address, $share_information, $shareholders_directors, $shareholders_directors_documents, $beneficial_owners, $beneficial_owners_documents);
-
+$stmt->bind_param("sssssss", $company_name, $business_type, $proposed_names, $proposed_name_documents, $articles_of_association, $registered_address, $share_information );
 // Execute the statement
 if ($stmt->execute()) {
-    echo "Business registration successful!";
-} else {
-    echo "Error: " . $stmt->error;
+// Get the last inserted ID
+$registration_id = $stmt->insert_id;
+
+$stmt->close();
+
+// Handle the shareholders and directors data
+foreach ($_POST['shareholders_directors_names'] as $key => $name) {
+    $shareholder_director_name = $name;
+    $shareholder_director_address = $_POST['shareholders_directors_addresses'][$key];
+    $shareholder_director_phone = $_POST['shareholders_directors_phones'][$key];
+    $shareholder_director_email = $_POST['shareholders_directors_emails'][$key];
+    $shareholder_director_shares = $_POST['shareholders_directors_shares'][$key];
+    $shareholder_director_national_id_path = uploadFiles($_FILES['shareholders_directors_national_ids'], $upload_dir);
+    $shareholder_director_pin_certificate_path = uploadFiles($_FILES['shareholders_directors_pin_certificates'], $upload_dir);
+    $shareholder_director_passport_photo_path = uploadFiles($_FILES['shareholders_directors_passport_photos'], $upload_dir);
+
+    // Prepare the SQL statement for shareholders_directors table
+    $sql = "INSERT INTO shareholders_directors (registration_id, name, national_id_path, pin_certificate_path, passport_photo_path, address, phone, email, shares)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    // Prepare the statement
+    $stmt = $conn->prepare($sql);
+
+    // Bind the parameters
+    $stmt->bind_param("isssssssi", $registration_id, $shareholder_director_name, $shareholder_director_national_id_path[0], $shareholder_director_pin_certificate_path[0], $shareholder_director_passport_photo_path[0], $shareholder_director_address, $shareholder_director_phone, $shareholder_director_email, $shareholder_director_shares);
+
+    // Execute the statement
+    $stmt->execute();
+
+    // Close the statement
+    $stmt->close();
 }
 
-// Close the statement and connection
-$stmt->close();
+// Handle the beneficial owners data
+foreach ($_POST['beneficial_owners_names'] as $key => $name) {
+    $beneficial_owner_name = $name;
+    $beneficial_owner_id = $_POST['beneficial_owners_ids'][$key];
+    $beneficial_owner_address = $_POST['beneficial_owners_addresses'][$key];
+    $beneficial_owner_phone = $_POST['beneficial_owners_phones'][$key];
+    $beneficial_owner_email = $_POST['beneficial_owners_emails'][$key];
+    $beneficial_owner_shares = $_POST['beneficial_owners_shares'][$key];
+    $beneficial_owner_document_path = uploadFiles($_FILES['beneficial_owners_documents'], $upload_dir);
+
+    // Prepare the SQL statement for beneficial_owners table
+  // Prepare the SQL statement for shareholders_directors table
+// Prepare the SQL statement for beneficial_owners table
+// Prepare the SQL statement for beneficial_owners table
+$sql = "INSERT INTO beneficial_owners (registration_id, name, id, supporting_document_path, address, phone, email, shares_percentage)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+// Prepare the statement
+$stmt = $conn->prepare($sql);
+
+// Bind the parameters
+// Bind the parameters
+$stmt->bind_param("ississsi", $registration_id, $beneficial_owner_name, $beneficial_owner_id, $beneficial_owner_document_path[0], $beneficial_owner_address, $beneficial_owner_phone, $beneficial_owner_email, $beneficial_owner_shares);
+
+// Execute the statement
+$stmt->execute();
+
+    // Close the statement
+    $stmt->close();
+}
+
+echo "Business registration successful!";
+} else {
+echo "Error: " . $stmt->error;
+}
+// Close the database connection
 $conn->close();
 ?>
